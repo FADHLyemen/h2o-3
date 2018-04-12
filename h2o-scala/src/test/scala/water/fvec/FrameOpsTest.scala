@@ -21,6 +21,19 @@ class FrameOpsTest extends TestUtil {
     fr.delete()
   }
 
+  /** Test importing from HTTP together with import from file://
+    * The purpose of this test is to test that we can specify multiple sources as part of one single frame creation call
+    */
+  @Test
+  def testImportFromHTTPWithFile(): Unit = {
+    val fr = new H2OFrame(URI.create("http://s3.amazonaws.com/h2o-public-test-data/smalldata/airlines/AirlinesTest.csv.zip"), FileUtils.getFile("smalldata/airlines/AirlinesTest.csv.zip").toURI)
+    assert(fr.numCols() == 12)
+    assert(fr.numRows() == 2691)
+    assert(fr.anyVec().nChunks() == 1)
+    fr.delete()
+  }
+
+
   @Test
   def testParserSetup(): Unit = {
     val irisFile = FileUtils.getFile("smalldata/iris/iris.csv")

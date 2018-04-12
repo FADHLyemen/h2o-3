@@ -7,6 +7,7 @@ import water.Value;
 import water.exceptions.H2OIllegalArgumentException;
 import water.fvec.UploadFileVec;
 import water.util.FileUtils;
+import water.util.FrameUtils;
 import water.util.Log;
 import water.persist.Persist.PersistEntry;
 
@@ -195,9 +196,7 @@ public class PersistManager {
   public final Key anyURIToKey(URI uri) throws IOException {
     Key ikey;
     String scheme = uri.getScheme();
-    if ("http".equals(scheme) || "https".equals(scheme)){
-      ikey = frameFromHTTP(uri.toString());
-    } else if ("s3".equals(scheme)) {
+    if ("s3".equals(scheme)) {
       ikey = I[Value.S3].uriToKey(uri);
     } else if ("hdfs".equals(scheme)) {
       ikey = I[Value.HDFS].uriToKey(uri);
@@ -264,15 +263,6 @@ public class PersistManager {
     return I[Value.NFS].calcTypeaheadMatches(filter, limit);
   }
 
-  private Key frameFromHTTP(String path) throws IOException {
-    java.net.URL url = new URL(path);
-    Key destination_key = Key.make(path);
-    java.io.InputStream is = url.openStream();
-    UploadFileVec.ReadPutStats stats = new UploadFileVec.ReadPutStats();
-    UploadFileVec.readPut(destination_key, is, stats);
-    return destination_key;
-  }
-
   /**
    * From a path produce a list of files and keys for parsing.
    *
@@ -298,7 +288,7 @@ public class PersistManager {
       I[Value.NFS].importFiles(path, pattern, files, keys, fails, dels);
     } else if ("http".equals(scheme) || "https".equals(scheme)) {
       try {
-        Key destination_key = frameFromHTTP(path);
+        Key destination_key = FrameUtils.eagerLoadFromHTTP(path);
         files.add(path);
         keys.add(destination_key.toString());
       } catch( Throwable e) {
