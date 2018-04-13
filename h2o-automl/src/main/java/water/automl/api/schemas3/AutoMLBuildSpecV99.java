@@ -36,6 +36,10 @@ public class AutoMLBuildSpecV99 extends SchemaV3<AutoMLBuildSpec, AutoMLBuildSpe
 
     @API(help="Number of folds for k-fold cross-validation (defaults to 5, must be >=2 or use 0 to disable). Disabling prevents Stacked Ensembles from being built.", direction=API.Direction.INPUT)
     public int nfolds;
+
+    @API(help="Keep CV predictions and CV models", direction=API.Direction.INPUT)
+    public boolean keep_cv_preds_models;
+
   } // class AutoMLBuildControlV99
 
   /**

@@ -76,7 +76,8 @@ class H2OAutoML(object):
                  stopping_rounds=3,
                  seed=None,
                  project_name=None,
-                 exclude_algos=None):
+                 exclude_algos=None,
+                 keep_cv_preds_models = True):
 
         # Check if H2O jar contains AutoML
         try:
@@ -107,7 +108,8 @@ class H2OAutoML(object):
             assert_is_type(nfolds,int)
         assert nfolds >= 0, "nfolds set to " + str(nfolds) + "; nfolds cannot be negative. Use nfolds >=2 if you want cross-valiated metrics and Stacked Ensembles or use nfolds = 0 to disable."
         assert nfolds is not 1, "nfolds set to " + str(nfolds) + "; nfolds = 1 is an invalid value. Use nfolds >=2 if you want cross-valiated metrics and Stacked Ensembles or use nfolds = 0 to disable."           
-        self.build_control["nfolds"] = nfolds 
+        self.build_control["nfolds"] = nfolds
+        self.build_control["keep_cv_preds_models"] = keep_cv_preds_models
         self.nfolds = nfolds   
 
         # If max_runtime_secs is not provided, then it is set to default (3600 secs)

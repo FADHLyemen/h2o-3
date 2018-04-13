@@ -53,6 +53,8 @@ public class AutoMLBuildSpec extends Iced {
     // Cross-validation fold construction
     public int nfolds = 5; 
     //public Model.Parameters.FoldAssignmentScheme fold_assignment;
+
+    public boolean keep_cv_preds_models = true;
   }
 
   /**

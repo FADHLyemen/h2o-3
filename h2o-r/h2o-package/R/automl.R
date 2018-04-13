@@ -58,7 +58,8 @@ h2o.automl <- function(x, y, training_frame,
                        stopping_rounds = 3,
                        seed = NULL,
                        project_name = NULL,
-                       exclude_algos = NULL)
+                       exclude_algos = NULL,
+                       keep_cv_preds_models = TRUE)
 {
 
   tryCatch({
@@ -146,6 +147,7 @@ h2o.automl <- function(x, y, training_frame,
   
   # Update build_control list with top level build control args
   build_control <- list(stopping_criteria = list(max_runtime_secs = max_runtime_secs))
+  build_control$keep_cv_preds_models <- keep_cv_preds_models
   if (!is.null(max_models)) {
     build_control$stopping_criteria$max_models <- max_models
   }
