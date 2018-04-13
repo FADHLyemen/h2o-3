@@ -261,7 +261,7 @@ class BuildConfig {
   }
 
   String getCurrentXGBVersion() {
-    return additionalGradleOpts
+    return xgbVersion
   }
 
   private void detectChanges(List<String> changes) {

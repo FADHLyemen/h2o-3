@@ -44,7 +44,9 @@ class PipelineUtils {
     }
 
     void pullXGBWheels(final context) {
-        context.unstash(context, 'xgb-whls')
+        context.sh 'pwd'
+        unstashFiles(context, 'xgb-whls')
+        context.sh 'ls -alh'
     }
 
     void stashScripts(final context) {
@@ -82,9 +84,12 @@ class PipelineUtils {
         return distributionsToBuild
     }
 
-    String readCurrentXGBVersion(final context) {
-        final String xgbVersion =  context.sh(returnStdout: true, script: "cd h2o-3 && ./gradlew -b h2o-genmodel-extensions/xgboost/build.gradle dependencies --configuration compile | grep ai.h2o:xgboost4j: | sed -e 's/^.*ai\\.h2o:xgboost4j://'").trim()
+    def readCurrentXGBVersion(final context) {
+        final def xgbVersion = context.sh(script: "cd h2o-3 && cat h2o-genmodel-extensions/xgboost/build.gradle | grep ai.h2o:xgboost4j: | egrep -o '([0-9]+\\.+)+[0-9]+'", returnStdout: true).trim()
         context.echo "XGBoost Version: ${xgbVersion}"
+        if (xgbVersion == null || xgbVersion == '') {
+            context.error("XGBoost version cannot be read")
+        }
         return xgbVersion
     }
 
