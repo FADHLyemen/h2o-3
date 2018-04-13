@@ -53,8 +53,6 @@ public class AutoMLBuildSpec extends Iced {
     // Cross-validation fold construction
     public int nfolds = 5; 
     //public Model.Parameters.FoldAssignmentScheme fold_assignment;
-
-    public boolean keep_cv_preds_models = true;
   }
 
   /**
@@ -81,6 +79,7 @@ public class AutoMLBuildSpec extends Iced {
     public String fold_column;
     public String weights_column;
     public String[] ignored_columns;
+    public boolean keep_cv_preds_models;
   }
 
   /**

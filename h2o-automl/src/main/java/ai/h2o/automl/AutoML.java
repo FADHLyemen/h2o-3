@@ -1199,7 +1199,7 @@ public final class AutoML extends Lockable<AutoML> implements TimedH2ORunnable {
             notEnsembles[notEnsembleIndex++] = aModel._key;
 
         Job<StackedEnsembleModel> ensembleJob = stack("StackedEnsemble_AllModels", notEnsembles);
-        if (!buildSpec.build_control.keep_cv_preds_models) {
+        if (!buildSpec.input_spec.keep_cv_preds_models) {
           cleanUpStackedEnsembles(ensembleJob);
         }
         pollAndUpdateProgress(Stage.ModelTraining, "StackedEnsemble build using all AutoML models", 50, this.job(), ensembleJob, JobType.ModelBuild);
@@ -1221,7 +1221,7 @@ public final class AutoML extends Lockable<AutoML> implements TimedH2ORunnable {
           bestModelKeys[i] = bestModelsOfEachType.get(i)._key;
 
         Job<StackedEnsembleModel> bestEnsembleJob = stack("StackedEnsemble_BestOfFamily", bestModelKeys);
-        if (!buildSpec.build_control.keep_cv_preds_models) {
+        if (!buildSpec.input_spec.keep_cv_preds_models) {
           cleanUpStackedEnsembles(bestEnsembleJob);
         }
         pollAndUpdateProgress(Stage.ModelTraining, "StackedEnsemble build using top model from each algorithm type", 50, this.job(), bestEnsembleJob, JobType.ModelBuild);
@@ -1259,7 +1259,7 @@ public final class AutoML extends Lockable<AutoML> implements TimedH2ORunnable {
 
     possiblyVerifyImmutability();
 
-    if (!buildSpec.build_control.keep_cv_preds_models) {
+    if (!buildSpec.input_spec.keep_cv_preds_models) {
       cleanUpModels();
     }
 
