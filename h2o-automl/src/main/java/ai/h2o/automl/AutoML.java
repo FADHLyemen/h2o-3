@@ -1511,7 +1511,7 @@ public final class AutoML extends Lockable<AutoML> implements TimedH2ORunnable {
   }
   
   private void cleanUpStackedEnsembles(Job<StackedEnsembleModel> ensembleJob) {
-    Log.info("Remove CV Preds/Models for the SE model");
+    Log.info("Remove CV Preds & Models from " + ensembleJob.get()._key.toString() + "'s metalearner");
     //Clear out all CV preds and CV models
     if (ensembleJob.get()._output._metalearner._output._cross_validation_predictions != null) {
       for (Key k : ensembleJob.get()._output._metalearner._output._cross_validation_predictions) {
