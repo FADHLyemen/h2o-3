@@ -23,8 +23,28 @@ class PipelineUtils {
         stashFiles(context, stashName, includedFiles, false)
     }
 
+    void stashXGBoostWheels(final context, final String xgbVersion) {
+        context.echo "Preparing to stash whls for XGBoost ${xgbVersion}"
+        context.copyArtifacts(
+                projectName: 'h2o-3-xgboost4j-release-pipeline/mr%2Fita%2F276-release-wheels',
+                // FIXME set correct build selector - xgbVersion.split('\\.').last()
+                selector: context.specific('17'),
+                filter: 'linux-ompv4/ci-build/*.whl',
+                flatten: true,
+                fingerprintArtifacts: true,
+                target: 'h2o-3/xgb-whls'
+        )
+        final String whlsPath = 'h2o-3/xgb-whls/*.whl'
+        context.sh "echo \"********* Stash \$(ls ${whlsPath} | tr '\n' ' ') *********\""
+        stashFiles(context, 'xgb-whls', whlsPath, false)
+    }
+
     void unstashFiles(final context, final String stashName) {
         context.unstash stashName
+    }
+
+    void pullXGBWheels(final context) {
+        context.unstash(context, 'xgb-whls')
     }
 
     void stashScripts(final context) {
@@ -60,6 +80,12 @@ class PipelineUtils {
         }
 
         return distributionsToBuild
+    }
+
+    String readCurrentXGBVersion(final context) {
+        final String xgbVersion =  context.sh(returnStdout: true, script: "cd h2o-3 && ./gradlew -b h2o-genmodel-extensions/xgboost/build.gradle dependencies --configuration compile | grep ai.h2o:xgboost4j: | sed -e 's/^.*ai\\.h2o:xgboost4j://'").trim()
+        context.echo "XGBoost Version: ${xgbVersion}"
+        return xgbVersion
     }
 
     boolean dockerImageExistsInRegistry(final context, final String registry, final String imageName, final String version) {

@@ -9,14 +9,15 @@ def call(final pipelineContext, final stageConfig) {
   final GString TEST_CASES_FILE = "test_cases_${stageConfig.customData.algorithm}.csv"
   final GString ML_BENCHMARK_ROOT = "${env.WORKSPACE}/${pipelineContext.getUtils().stageNameToDirName(stageConfig.stageName)}/h2o-3/ml-benchmark"
 
-  stageConfig.datasetsPath = "${ML_BENCHMARK_ROOT}/h2oR/${DATASETS_FILE}"
-  stageConfig.testCasesPath = "${ML_BENCHMARK_ROOT}/h2oR/${TEST_CASES_FILE}"
+  stageConfig.datasetsPath = "${ML_BENCHMARK_ROOT}/jenkins/${DATASETS_FILE}"
+  stageConfig.testCasesPath = "${ML_BENCHMARK_ROOT}/jenkins/${TEST_CASES_FILE}"
   stageConfig.makefilePath = stageConfig.makefilePath ?: "${ML_BENCHMARK_ROOT}/jenkins/Makefile.jenkins"
 
   dir (ML_BENCHMARK_ROOT) {
     retry(3) {
       timeout(time: 1, unit: 'MINUTES') {
-        checkout changelog: false, poll: false, scm: [$class: 'GitSCM', branches: [[name: 'master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: H2O_OPS_CREDS_ID, url: 'https://github.com/h2oai/ml-benchmark']]]
+        // FIXME set master branch
+        checkout changelog: false, poll: false, scm: [$class: 'GitSCM', branches: [[name: 'mr/ita/279-xgb-vanilla-benchmarks']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: H2O_OPS_CREDS_ID, url: 'https://github.com/h2oai/ml-benchmark']]]
       }
     }
     sh "cat h2oR/${DATASETS_FILE}"

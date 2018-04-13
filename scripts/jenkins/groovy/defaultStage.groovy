@@ -20,6 +20,8 @@ def call(final pipelineContext, final stageConfig) {
 
         if (stageConfig.component == pipelineContext.getBuildConfig().COMPONENT_PY || stageConfig.additionalTestPackages.contains(pipelineContext.getBuildConfig().COMPONENT_PY)) {
             installPythonPackage(h2oFolder)
+            pipelineContext.getUtils().pullXGBWheels(pipelineContext.getBuildConfig().getCurrentXGBVersion())
+            installXGBWheel()
         }
 
         if (stageConfig.component == pipelineContext.getBuildConfig().COMPONENT_R || stageConfig.additionalTestPackages.contains(pipelineContext.getBuildConfig().COMPONENT_R)) {
@@ -43,18 +45,27 @@ def call(final pipelineContext, final stageConfig) {
 
 def installPythonPackage(String h2o3dir) {
     sh """
-    echo "Activating Python ${env.PYTHON_VERSION}"
-    . /envs/h2o_env_python${env.PYTHON_VERSION}/bin/activate
-    pip install ${h2o3dir}/h2o-py/dist/*.whl
-  """
+        echo "Activating Python ${env.PYTHON_VERSION}"
+        . /envs/h2o_env_python${env.PYTHON_VERSION}/bin/activate
+        pip install ${h2o3dir}/h2o-py/dist/*.whl
+    """
 }
 
 def installRPackage(String h2o3dir) {
     sh """
-    echo "Activating R ${env.R_VERSION}"
-    activate_R_${env.R_VERSION}
-    R CMD INSTALL ${h2o3dir}/h2o-r/R/src/contrib/h2o*.tar.gz
-  """
+        echo "Activating R ${env.R_VERSION}"
+        activate_R_${env.R_VERSION}
+        R CMD INSTALL ${h2o3dir}/h2o-r/R/src/contrib/h2o*.tar.gz
+    """
+}
+
+def installXGBWheel(final String xgbVersion) {
+    sh """
+        echo "Activating Python ${env.PYTHON_VERSION}"
+        . /envs/h2o_env_python${env.PYTHON_VERSION}/bin/activate
+        pip uninstall -y xgboost
+        pip install ${h2o3dir}/xgb-whls/xgboost_ompv4-${xgbVersion}-cp${env.PYTHON_VERSION.replaceAll('\\.','')}-*-linux_x86_64.whl
+    """
 }
 
 return this

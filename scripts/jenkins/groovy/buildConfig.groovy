@@ -1,6 +1,6 @@
-def call(final context, final String mode, final String commitMessage, final List<String> changes, final boolean ignoreChanges, final List<String> distributionsToBuild, final List<String> gradleOpts) {
+def call(final context, final String mode, final String commitMessage, final List<String> changes, final boolean ignoreChanges, final List<String> distributionsToBuild, final List<String> gradleOpts, final String xgbVersion) {
   def buildConfig = new BuildConfig()
-  buildConfig.initialize(context, mode, commitMessage, changes, ignoreChanges, distributionsToBuild, gradleOpts)
+  buildConfig.initialize(context, mode, commitMessage, changes, ignoreChanges, distributionsToBuild, gradleOpts, xgbVersion)
   return buildConfig
 }
 
@@ -52,7 +52,7 @@ class BuildConfig {
   public static final String BENCHMARK_MAKEFILE_PATH = 'ml-benchmark/jenkins/Makefile.jenkins'
 
   private static final Map EXPECTED_IMAGE_VERSIONS= [
-          (DEFAULT_IMAGE): 'docker.h2o.ai/opsh2oai/h2o-3-runtime@sha256:c53d46f1ffd1e835620a68b0a2c3e3ab390b216817be44d2988f15b3f0ef35b5',
+          (DEFAULT_IMAGE): 'docker.h2o.ai/opsh2oai/h2o-3-runtime@sha256:4753d375605fbc3c234044248d809dff78996548d12327a783119f4e9f7ed91b',
           (BENCHMARK_IMAGE): 'docker.h2o.ai/opsh2oai/h2o-3-benchmark@sha256:2bb6c322827c7be914d69c2b49576d77fce21fbc5e056e05386f9af557304a4a',
 
           'docker.h2o.ai/opsh2oai/h2o-3-hadoop-hdp-2.2:46': 'docker.h2o.ai/opsh2oai/h2o-3-hadoop-hdp-2.2@sha256:a699fc2b06bec2f6b5f180f318b11d70d61c05b0c1fcb8f992ee5e159001c423',
@@ -103,14 +103,16 @@ class BuildConfig {
     (COMPONENT_ANY): true
   ]
   private List<String> additionalGradleOpts
+  private String xgbVersion
 
   void initialize(final context, final String mode, final String commitMessage, final List<String> changes,
-                  final boolean ignoreChanges, final List<String> distributionsToBuild, final List<String> gradleOpts) {
+                  final boolean ignoreChanges, final List<String> distributionsToBuild, final List<String> gradleOpts, final String xgbVersion) {
     this.mode = mode
     this.nodeLabel = nodeLabel
     this.commitMessage = commitMessage
     this.buildHadoop = mode == 'MODE_HADOOP'
     this.additionalGradleOpts = gradleOpts
+    this.xgbVersion = xgbVersion
     this.hadoopDistributionsToBuild = distributionsToBuild
     if (ignoreChanges) {
       markAllComponentsForTest()
@@ -255,6 +257,10 @@ class BuildConfig {
   }
 
   List<String> getAdditionalGradleOpts() {
+    return additionalGradleOpts
+  }
+
+  String getCurrentXGBVersion() {
     return additionalGradleOpts
   }
 
