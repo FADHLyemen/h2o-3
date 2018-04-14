@@ -6,7 +6,6 @@ import hex.Model;
 import hex.ModelBuilder;
 import hex.StackedEnsembleModel;
 import hex.deeplearning.DeepLearningModel;
-import hex.ensemble.StackedEnsemble;
 import hex.glm.GLMModel;
 import hex.grid.Grid;
 import hex.grid.GridSearch;
