@@ -203,7 +203,7 @@ class H2OAutoML(object):
     #---------------------------------------------------------------------------
     def train(self, x = None, y = None, training_frame = None, fold_column = None, 
               weights_column = None, validation_frame = None, leaderboard_frame = None,
-              keep_cv_preds_models = True):
+              keep_cross_validation_predictions = True):
         """
         Begins an AutoML task, a background task that automatically builds a number of models
         with various algorithms and tracks their performance in a leaderboard. At any point 
@@ -222,7 +222,8 @@ class H2OAutoML(object):
             (unless max_models or max_runtime_secs overrides metric-based early stopping).
         :param leaderboard_frame: H2OFrame with test data for scoring the leaderboard.  This is optional and
             if this is set to None (the default), then cross-validation metrics will be used to generate the leaderboard 
-            rankings instead.  
+            rankings instead.
+        :param keep_cross_validation_predictions: Whether to keep the predictions of the cross-validation models. Defaults to ``True``.
 
         :returns: An H2OAutoML object.
 
@@ -273,8 +274,8 @@ class H2OAutoML(object):
             assert_is_type(training_frame, H2OFrame)
             input_spec['leaderboard_frame'] = leaderboard_frame.frame_id
 
-        assert_is_type(keep_cv_preds_models, bool)
-        input_spec["keep_cv_preds_models"] = keep_cv_preds_models
+        assert_is_type(keep_cross_validation_predictions, bool)
+        input_spec["keep_cross_validation_predictions"] = keep_cross_validation_predictions
 
         if x is not None:
             assert_is_type(x,list)

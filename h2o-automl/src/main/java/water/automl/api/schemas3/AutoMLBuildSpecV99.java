@@ -108,7 +108,7 @@ public class AutoMLBuildSpecV99 extends SchemaV3<AutoMLBuildSpec, AutoMLBuildSpe
     public String[] ignored_columns;
 
     @API(help="Keep CV predictions and CV models", direction=API.Direction.INPUT)
-    public boolean keep_cv_preds_models;
+    public boolean keep_cross_validation_predictions;
   } // class AutoMLInputV99
 
   static final public class AutoMLFeatureEngineeringV99 extends Schema<AutoMLBuildSpec.AutoMLFeatureEngineering, AutoMLFeatureEngineeringV99> {
