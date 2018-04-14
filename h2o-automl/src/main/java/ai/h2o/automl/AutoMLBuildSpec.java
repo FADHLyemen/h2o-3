@@ -80,6 +80,7 @@ public class AutoMLBuildSpec extends Iced {
     public String weights_column;
     public String[] ignored_columns;
     public boolean keep_cross_validation_predictions;
+    public boolean keep_cross_validation_models;
   }
 
   /**

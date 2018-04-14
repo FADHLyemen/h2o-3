@@ -6,6 +6,7 @@ import hex.Model;
 import hex.ModelBuilder;
 import hex.StackedEnsembleModel;
 import hex.deeplearning.DeepLearningModel;
+import hex.ensemble.StackedEnsemble;
 import hex.glm.GLMModel;
 import hex.grid.Grid;
 import hex.grid.GridSearch;
@@ -1200,7 +1201,10 @@ public final class AutoML extends Lockable<AutoML> implements TimedH2ORunnable {
 
         Job<StackedEnsembleModel> ensembleJob = stack("StackedEnsemble_AllModels", notEnsembles);
         if (!buildSpec.input_spec.keep_cross_validation_predictions) {
-          cleanUpStackedEnsembles(ensembleJob);
+          cleanUpStackedEnsemblesCVPreds(ensembleJob);
+        }
+        if (!buildSpec.input_spec.keep_cross_validation_models) {
+          cleanUpStackedEnsemblesCVModels(ensembleJob);
         }
         pollAndUpdateProgress(Stage.ModelTraining, "StackedEnsemble build using all AutoML models", 50, this.job(), ensembleJob, JobType.ModelBuild);
 
@@ -1222,7 +1226,10 @@ public final class AutoML extends Lockable<AutoML> implements TimedH2ORunnable {
 
         Job<StackedEnsembleModel> bestEnsembleJob = stack("StackedEnsemble_BestOfFamily", bestModelKeys);
         if (!buildSpec.input_spec.keep_cross_validation_predictions) {
-          cleanUpStackedEnsembles(bestEnsembleJob);
+          cleanUpStackedEnsemblesCVPreds(bestEnsembleJob);
+        }
+        if (!buildSpec.input_spec.keep_cross_validation_models) {
+          cleanUpStackedEnsemblesCVModels(bestEnsembleJob);
         }
         pollAndUpdateProgress(Stage.ModelTraining, "StackedEnsemble build using top model from each algorithm type", 50, this.job(), bestEnsembleJob, JobType.ModelBuild);
       }
@@ -1260,7 +1267,11 @@ public final class AutoML extends Lockable<AutoML> implements TimedH2ORunnable {
     possiblyVerifyImmutability();
 
     if (!buildSpec.input_spec.keep_cross_validation_predictions) {
-      cleanUpModels();
+      cleanUpModelsCVPreds();
+    }
+
+    if (!buildSpec.input_spec.keep_cross_validation_models) {
+      cleanUpModelsCVModels();
     }
 
     // gather more data? build more models? start applying transforms? what next ...?
@@ -1510,7 +1521,7 @@ public final class AutoML extends Lockable<AutoML> implements TimedH2ORunnable {
     return m._key.toString().startsWith("XRT_") ? "XRT" : m._parms.algoName();
   }
   
-  private void cleanUpStackedEnsembles(Job<StackedEnsembleModel> ensembleJob) {
+  private void cleanUpStackedEnsemblesCVPreds(Job<StackedEnsembleModel> ensembleJob) {
     Log.info("Remove CV Preds & Models from " + ensembleJob.get()._key.toString() + "'s metalearner");
     //Clear out all CV preds and CV models
     if (ensembleJob.get()._output._metalearner._output._cross_validation_predictions != null) {
@@ -1523,11 +1534,14 @@ public final class AutoML extends Lockable<AutoML> implements TimedH2ORunnable {
       Log.info("Remove CV Prediction Frame for " + ensembleJob.get()._output._metalearner._key.toString());
       ensembleJob.get()._output._metalearner._output._cross_validation_holdout_predictions_frame_id.remove();
     }
+  }
+
+  private void cleanUpStackedEnsemblesCVModels(Job<StackedEnsembleModel> ensembleJob) {
     Log.info("Remove CV Models for " + ensembleJob.get()._output._metalearner._key.toString());
     ensembleJob.get()._output._metalearner.deleteCrossValidationModels();
   }
 
-  private void cleanUpModels() {
+  private void cleanUpModelsCVPreds() {
     //Clear out all CV preds and CV models
     for (Model model : leaderboard().getModels()) {
       if (!model._parms.algoName().equals("stackedensemble")) {
@@ -1541,9 +1555,14 @@ public final class AutoML extends Lockable<AutoML> implements TimedH2ORunnable {
           Log.info("Remove CV Prediction Frame for " + model._key.toString());
           model._output._cross_validation_holdout_predictions_frame_id.remove();
         }
-        Log.info("Remove CV Models for " + model._key.toString());
-        model.deleteCrossValidationModels();
       }
+    }
+  }
+
+  private void cleanUpModelsCVModels() {
+    for (Model model : leaderboard().getModels()) {
+      Log.info("Remove CV Models for " + model._key.toString());
+      model.deleteCrossValidationModels();
     }
   }
 }

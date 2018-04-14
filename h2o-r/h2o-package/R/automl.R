@@ -33,7 +33,8 @@
 #' @param exclude_algos Vector of character strings naming the algorithms to skip during the model-building phase.  An example use is exclude_algos = c("GLM", "DeepLearning", "DRF"), 
 #'        and the full list of options is: "GLM", "GBM", "DRF" (Random Forest and Extremely-Randomized Trees), "DeepLearning" and "StackedEnsemble". Defaults to NULL, which means that 
 #'        all appropriate H2O algorithms will be used, if the search stopping criteria allow. Optional.
-#' @param keep_cross_validation_predictions \code{Logical}. Whether to keep the predictions of the cross-validation models. Defaults to TRUE.
+#' @param keep_cross_validation_predictions \code{Logical}. Whether to keep the predictions of the cross-validation models. Defaults to FALSE.
+#' @param keep_cross_validation_predictions \code{Logical}. Whether to keep the cross-validated models. Defaults to FALSE.
 #' @details AutoML finds the best model, given a training frame and response, and returns an H2OAutoML object,
 #'          which contains a leaderboard of all the models that were trained in the process, ranked by a default model performance metric.  
 #' @return An \linkS4class{H2OAutoML} object.
@@ -60,7 +61,8 @@ h2o.automl <- function(x, y, training_frame,
                        seed = NULL,
                        project_name = NULL,
                        exclude_algos = NULL,
-                       keep_cross_validation_predictions = TRUE)
+                       keep_cross_validation_predictions = FALSE,
+                       keep_cross_validation_models = FALSE)
 {
 
   tryCatch({
@@ -119,6 +121,7 @@ h2o.automl <- function(x, y, training_frame,
   input_spec$validation_frame <- validation_frame_id
   input_spec$leaderboard_frame <- leaderboard_frame_id
   input_spec$keep_cross_validation_predictions <- keep_cross_validation_predictions
+  input_spec$keep_cross_validation_models <- keep_cross_validation_models
   if (!is.null(fold_column)) {
     input_spec$fold_column <- fold_column
   }
