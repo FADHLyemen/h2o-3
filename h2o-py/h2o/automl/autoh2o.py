@@ -278,6 +278,8 @@ class H2OAutoML(object):
 
         assert_is_type(keep_cross_validation_predictions, bool)
         input_spec["keep_cross_validation_predictions"] = keep_cross_validation_predictions
+
+        assert_is_type(keep_cross_validation_models, bool)
         input_spec["keep_cross_validation_models"] = keep_cross_validation_models
 
         if x is not None:
