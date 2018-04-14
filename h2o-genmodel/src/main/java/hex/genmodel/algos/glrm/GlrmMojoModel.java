@@ -15,7 +15,9 @@ public class GlrmMojoModel extends MojoModel {
   public int _ncolY;
   public int _nrowY;
   public double[][] _archetypes;
+  public double[][] _archetypes_raw;
   public int[] _numLevels;
+  public int [] _catOffsets;
   public int[] _permutation;
   public GlrmLoss[] _losses;
   public GlrmRegularizer _regx;
@@ -26,7 +28,11 @@ public class GlrmMojoModel extends MojoModel {
   public double[] _normSub;
   public double[] _normMul;
   public long _seed;
-  // We don't really care about regularization of Y since it is not used during scoring
+  public boolean _transposed;
+  public boolean _reverse_transform;
+  public double[] _reconstructed; // store x*Y per row
+
+  // We don't really care about regularization of Y since it is changed during scoring
 
   /**
    * This is the "learning rate" in the gradient descent method. More specifically, at each iteration step we update
@@ -57,6 +63,16 @@ public class GlrmMojoModel extends MojoModel {
 
   protected GlrmMojoModel(String[] columns, String[][] domains, String responseColumn) {
     super(columns, domains, responseColumn);
+    _reconstructed = new double[_ncats+_nnums];  // allocate _reconstructed
+    if (_transposed) {
+      _archetypes_raw = new double[_archetypes[0].length][_archetypes.length];
+      for (int row = 0; row < _archetypes.length; row++) {
+        for (int col = 0; col < _archetypes[0].length; col++) {
+          _archetypes_raw[col][row] = _archetypes[row][col];
+        }
+      }
+    } else
+      _archetypes_raw = _archetypes;
   }
 
   @Override public int getPredsSize(ModelCategory mc) {
@@ -123,6 +139,83 @@ public class GlrmMojoModel extends MojoModel {
     // System.out.println("obj = " + obj + ", alpha = " + alpha + ", n_iters = " + iters);
     System.arraycopy(x, 0, preds, 0, _ncolX);
     return preds;
+  }
+
+  // impute data from x and archetypes
+  private double[] impute_data(double[] xfactor, double[] preds) {
+    assert preds.length == _nnums + _ncats;
+
+    // Categorical columns
+    for (int d = 0; d <_ncats; d++) {
+      double[] xyblock = lmulCatBlock(xfactor,d);
+      preds[_permutation[d]] = _losses[d].mimpute(xyblock);
+    }
+
+    // Numeric columns
+    for (int d = _ncats; d < preds.length; d++) {
+      int ds = d - _ncats;
+      double xy = lmulNumCol(xfactor, ds);
+      preds[_permutation[d]] = _losses[d].impute(xy);
+      if (_reverse_transform)
+        preds[_permutation[d]] = preds[_permutation[d]] / _normMul[ds] + _normSub[ds];
+    }
+    return preds;
+  }
+
+  // For j = 0 to number of numeric columns - 1
+  public int getNumCidx(int j) {
+    return _catOffsets[_catOffsets.length-1]+j;
+  }
+  // Inner product x * y_j where y_j is numeric column j of Y
+  protected final double lmulNumCol(double[] x, int j) {
+    assert x != null && x.length == rank() : "x must be of length " + rank();
+    int cidx = getNumCidx(j);
+
+    double prod = 0;
+    if (_transposed) {
+      for (int k = 0; k < rank(); k++)
+        prod += x[k] * _archetypes[cidx][k];
+    } else {
+      for (int k = 0; k < rank(); k++)
+        prod += x[k] * _archetypes[k][cidx];
+    }
+    return prod;
+  }
+
+  // For j = 0 to number of categorical columns - 1, and level = 0 to number of levels in categorical column - 1
+  public int getCatCidx(int j, int level) {
+    int catColJLevel = _numLevels[j];
+    assert catColJLevel != 0 : "Number of levels in categorical column cannot be zero";
+    assert !Double.isNaN(level) && level >= 0 && level < catColJLevel : "Got level = " + level +
+            " when expected integer in [0," + catColJLevel + ")";
+    return _catOffsets[j]+level;
+  }
+
+  // Vector-matrix product x * Y_j where Y_j is block of Y corresponding to categorical column j
+  protected final double[] lmulCatBlock(double[] x, int j) {
+    int catColJLevel = _numLevels[j];
+    assert catColJLevel != 0 : "Number of levels in categorical column cannot be zero";
+    assert x != null && x.length == rank() : "x must be of length " + rank();
+    double[] prod = new double[catColJLevel];
+
+    if (_transposed) {
+      for (int level = 0; level < catColJLevel; level++) {
+        int cidx = getCatCidx(j,level);
+        for (int k = 0; k < rank(); k++)
+          prod[level] += x[k] * _archetypes[cidx][k];
+      }
+    } else {
+      for (int level = 0; level < catColJLevel; level++) {
+        int cidx = getCatCidx(j,level);
+        for (int k = 0; k < rank(); k++)
+          prod[level] += x[k] * _archetypes[k][cidx];
+      }
+    }
+    return prod;
+  }
+
+  public int rank() {
+    return _transposed ? _archetypes[0].length : _archetypes.length;
   }
 
   /**

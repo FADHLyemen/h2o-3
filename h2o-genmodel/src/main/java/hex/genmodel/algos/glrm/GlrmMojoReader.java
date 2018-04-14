@@ -30,6 +30,8 @@ public class GlrmMojoReader extends ModelMojoReader<GlrmMojoModel> {
     _model._normMul = readkv("norm_mul");
     _model._permutation = readkv("cols_permutation");
     _model._seed = ((Number) readkv("seed")).longValue();
+    _model._reverse_transform = readkv("reverse_transform");
+    _model._transposed = readkv("transposed");
 
     // loss functions
     _model._losses = new GlrmLoss[_model._ncolA];
@@ -40,6 +42,7 @@ public class GlrmMojoReader extends ModelMojoReader<GlrmMojoModel> {
 
     // archetypes
     _model._numLevels = readkv("num_levels_per_category");
+    _model._catOffsets = readkv("catOffsets");
     _model._archetypes = new double[_model._nrowY][];
     ByteBuffer bb = ByteBuffer.wrap(readblob("archetypes"));
     for (int i = 0; i < _model._nrowY; i++) {
