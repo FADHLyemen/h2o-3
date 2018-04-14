@@ -1,6 +1,9 @@
 package hex.glrm;
 
-import hex.*;
+import hex.DataInfo;
+import hex.Model;
+import hex.ModelCategory;
+import hex.ModelMetrics;
 import hex.genmodel.algos.glrm.GlrmInitialization;
 import hex.genmodel.algos.glrm.GlrmLoss;
 import hex.genmodel.algos.glrm.GlrmRegularizer;
@@ -10,10 +13,11 @@ import water.fvec.Chunk;
 import water.fvec.Frame;
 import water.fvec.Vec;
 import water.udf.CFuncRef;
-import water.util.*;
+import water.util.ArrayUtils;
 import water.util.TwoDimTable;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  * GLRM (<a href="https://web.stanford.edu/~boyd/papers/pdf/glrm.pdf">Generalized Low Rank Model</a>).
@@ -179,8 +183,6 @@ public class GLRMModel extends Model<GLRMModel, GLRMModel.GLRMParameters, GLRMMo
   }
 
 
-
-
   public GLRMModel(Key<GLRMModel> selfKey, GLRMParameters parms, GLRMOutput output) {
     super(selfKey, parms, output);
   }
@@ -208,7 +210,6 @@ public class GLRMModel extends Model<GLRMModel, GLRMModel.GLRMParameters, GLRMMo
   }
 
 
-
   //--------------------------------------------------------------------------------------------------------------------
   // Scoring
   //--------------------------------------------------------------------------------------------------------------------
@@ -224,7 +225,21 @@ public class GLRMModel extends Model<GLRMModel, GLRMModel.GLRMParameters, GLRMMo
     // Need [A,X,P] where A = adaptedFr, X = loading frame, P = imputed frame
     // Note: A is adapted to original training frame, P has columns shuffled so cats come before nums!
     Frame fullFrm = new Frame(adaptedFr);
-    Frame loadingFrm = DKV.get(_output._representation_key).get();
+    Frame loadingFrm = null;  // get this from DKV or generate it from scratch
+    // call resconstruct only if test frame key and training frame key matches plus frame dimensions match as well
+    if (orig._key.equals(_parms._train) && (orig.numRows() == _parms.train().numRows()) && (orig.numCols() == _parms.train().numCols()))
+      loadingFrm = DKV.get(_output._representation_key).get();
+    else {  // use glrm mojo and make this one fresh
+      // need to generate the X matrix and put it in as a frame ID.  Mojo predict will return one row of x as a double[]
+      GLRMGenX gs = new GLRMGenX(this, _parms._k);
+      gs.doAll(gs._k, Vec.T_NUM, orig);
+      _output._representation_key = Key.make(); // make a new key for x matrix
+      _output._representation_name = _output._representation_key.toString();
+      String[] loadingFrmNames = Arrays.copyOfRange(gs._genmodel._names, 0, gs._k);
+      String[][] loadingFrmDomains = new String[gs._k][];
+      loadingFrm = gs.outputFrame(_output._representation_key,loadingFrmNames, loadingFrmDomains);
+      DKV.put(loadingFrm);
+    }
     fullFrm.add(loadingFrm);
     String[][] adaptedDomme = adaptedFr.domains();
     Vec anyVec = fullFrm.anyVec();
@@ -243,6 +258,7 @@ public class GLRMModel extends Model<GLRMModel, GLRMModel.GLRMParameters, GLRMMo
     f = new Frame((destination_key == null ? Key.<Frame>make() : destination_key), f.names(), f.vecs());
     DKV.put(f);
     gs._mb.makeModelMetrics(GLRMModel.this, orig, null, null);   // save error metrics based on imputed data
+    loadingFrm.delete();
     return f;
   }
 

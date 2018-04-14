@@ -31,6 +31,7 @@ public class GlrmMojoWriter extends ModelMojoWriter<GLRMModel, GLRMModel.GLRMPar
     writekv("gammaX", model._parms._gamma_x);
     writekv("gammaY", model._parms._gamma_y);
     writekv("ncolX", model._parms._k);
+    writekv("seed", model._parms._seed);  // store seed for later use
 
     // DataInfo mapping
     writekv("cols_permutation", model._output._permutation);

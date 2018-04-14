@@ -25,6 +25,7 @@ public class GlrmMojoModel extends MojoModel {
   public int _nnums;
   public double[] _normSub;
   public double[] _normMul;
+  public long _seed;
   // We don't really care about regularization of Y since it is not used during scoring
 
   /**
@@ -80,7 +81,7 @@ public class GlrmMojoModel extends MojoModel {
 
     // Step 1: initialize X  (for now do Random initialization only)
     double[] x = new double[_ncolX];
-    Random random = new Random();
+    Random random = new Random(_seed);
     for (int i = 0; i < _ncolX; i++)
       x[i] = random.nextGaussian();
     x = _regx.project(x, random);

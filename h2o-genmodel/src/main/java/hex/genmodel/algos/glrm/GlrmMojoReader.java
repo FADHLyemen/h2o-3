@@ -29,6 +29,7 @@ public class GlrmMojoReader extends ModelMojoReader<GlrmMojoModel> {
     _model._normSub = readkv("norm_sub");
     _model._normMul = readkv("norm_mul");
     _model._permutation = readkv("cols_permutation");
+    _model._seed = ((Number) readkv("seed")).longValue();
 
     // loss functions
     _model._losses = new GlrmLoss[_model._ncolA];
